@@ -67,11 +67,18 @@ class ChatService {
     }
 
     fun getMessagesList(userId: Int, chatId: Int, firstUnreadMessageId: Int, unreadMessagesNumber: Int): List<Message> {
-        val messagesList = findById(chatId)?.messages
-            ?.filter { !it.isDeleted && it.senderId != userId && it.isUnread && it.messageId >= firstUnreadMessageId }
+         return findById(chatId)?.messages?.asSequence()
+            ?.filter { !it.isDeleted }
+            ?.filter { it.senderId != userId}
+            ?.filter { it.isUnread }
+            ?.filter { it.messageId >= firstUnreadMessageId }
             ?.take(unreadMessagesNumber)
-        messagesList?.forEach { it.isUnread = false }
-        return messagesList ?: emptyList()
+            ?.map {
+                it.isUnread = false
+                it
+            }
+            ?.toList()
+            ?.ifEmpty { emptyList() } ?: emptyList()
     }
 
     fun findById(chatId: Int?): Chat? {
@@ -90,7 +97,10 @@ class ChatService {
     }
 
     private fun getChatsWithUnreadMessages(userId: Int): List<Chat> {
-        return chats.filter { (it.userId1 == userId || it.userId2 == userId) && !it.isDeleted }
+        return chats.asSequence()
+            .filter { it.userId1 == userId || it.userId2 == userId }
+            .filter { !it.isDeleted }
             .filter { chat -> chat.messages.any { it.isUnread && it.senderId != userId && !it.isDeleted} }
+            .toList()
     }
 }
