@@ -68,7 +68,10 @@ class ChatService {
 
     fun getMessagesList(userId: Int, chatId: Int, firstUnreadMessageId: Int, unreadMessagesNumber: Int): List<Message> {
          return findById(chatId)?.messages?.asSequence()
-            ?.filter { !it.isDeleted && it.senderId != userId && it.isUnread && it.messageId >= firstUnreadMessageId }
+            ?.filter { !it.isDeleted }
+            ?.filter { it.senderId != userId}
+            ?.filter { it.isUnread }
+            ?.filter { it.messageId >= firstUnreadMessageId }
             ?.take(unreadMessagesNumber)
             ?.map {
                 it.isUnread = false
@@ -95,7 +98,8 @@ class ChatService {
 
     private fun getChatsWithUnreadMessages(userId: Int): List<Chat> {
         return chats.asSequence()
-            .filter { (it.userId1 == userId || it.userId2 == userId) && !it.isDeleted }
+            .filter { it.userId1 == userId || it.userId2 == userId }
+            .filter { !it.isDeleted }
             .filter { chat -> chat.messages.any { it.isUnread && it.senderId != userId && !it.isDeleted} }
             .toList()
     }
